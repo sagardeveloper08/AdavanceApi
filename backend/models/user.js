@@ -44,12 +44,12 @@ userSchema.methods.getJwtToken = function () {
     })
 }
 
-// userSchema.methods.getResetpasswordToken = function () {
-//     const resetToken = crypto.randomBytes(20).toString('hex')
+userSchema.methods.reset = function () {
+    const resetToken = crypto.randomBytes(20).toString('hex')
 
-//     this.resetpassword = crypto.createHash('sha256').update(resetToken).digest('hex')
+    this.resetpassword = crypto.createHash('sha256').update(resetToken).digest('hex')
 
-//     this.resetpasswordExpire = Date.now() + 30 * 60 * 1000
-//     return resetToken
-// }
+    this.resetpasswordExpire = Date.now() + 30 * 60 * 1000
+    return resetToken;
+}
 module.exports = mongoose.model('User', userSchema)
