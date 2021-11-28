@@ -2,8 +2,8 @@ const express = require('express');
 const User = require('../models/user')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
-const cookie = require('../utilis/cookies');
-const sendToken = require('../middleware/Auth');
+// const cookie = require('../utilis/cookies');
+// const sendToken = require('../middleware/Auth');
 // const user = require('../models/user');
 // const user = require('../models/user');
 const sendEmail = require('../utilis/sendEmail')
@@ -76,8 +76,9 @@ exports.isLogin = async (req, res) => {
         }
     }
     catch (err) {
-        res.status(400).json({ message: "Something went wrong", err });
         console.log(err)
+        res.status(400).json({ message: "Something went wrong", err });
+       
     }
 }
 
@@ -160,8 +161,9 @@ exports.resetPassword = async (req, res, next) => {
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(req.body.password, salt);
         console.log('password', user.password)
-        user. resetpassword = undefined;
+        user.resetpassword = undefined;
         user.resetpasswordExpire = undefined;
+
 
         await user.save()
         res.status(200).json({ message: "password reset ,!go back and login", resetPasswordToken })
@@ -172,3 +174,120 @@ exports.resetPassword = async (req, res, next) => {
 }
 
 
+// details of users cureently logged in
+
+exports.getUserDetails = async (req, res, next) => {
+    try {
+        const user = await User.findById(req.user.id)
+        res.status(200).json({ message: "user fetch sucessfully", user })
+    } catch (err) {
+        console.log(err)
+        res.status(400).json({ messagar: "something went wrong kindly check it" })
+    }
+
+}
+
+//
+
+exports.updatePassword = async (req, res, next) => {
+    try {
+        const user = await User.findById(req.user.id).select('+password')
+        if (!user) {
+            res.status(401).json({ message: "user not found" })
+        }
+        const isMatched = await user.comparePassword(req.body.oldPassword)
+        if (!isMatched) {
+            return next(res.status(400).json({ message: "old password is incorrect" }))
+        }
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(req.body.password, salt);
+        await user.save();
+        res.status(200).json({ message: "password update sucessfuly" })
+    } catch (err) {
+        console.log(err)
+        res.status(400).json({ message: "something went wrong" })
+    }
+}
+
+// update user profile
+exports.updateUserProfile = async (req, res) => {
+    try {
+        const newUserData = {
+            name: req.body.name,
+            email: req.body.email
+        }
+        const user = await User.findByIdAndUpdate(req.user.id, newUserData, {
+            new: true,
+            runValidators: true,
+            useFindAndModify: "false"
+        })
+        if (user) {
+            res.status(200).json({ message: "user update sucessfully", user })
+        }
+    } catch (err) {
+        console.log(err)
+        res.status(400).json({ messgae: "something went wrong " })
+    }
+}
+
+// get all user by admin
+exports.allUser = async (req, res) => {
+    try {
+        const user = await User.find()
+        if (user) {
+            res.status(200).json({ count: user.length, message: "user fetch sucessfully", user })
+        }
+    } catch (err) {
+        res.status(400).json({ messgae: "cant find user data " })
+    }
+}
+
+exports.getDetails = async (req, res) => {
+    try {
+        const userById = await User.findById(req.params.id)
+        if (userById) {
+            res.status(200).json({ messgae: "fetch data", userById })
+        }
+    }
+    catch {
+        res.status(400).json({ messgae: "something went wrong" })
+    }
+}
+
+exports.updateUser = async (req, res) => {
+    try {
+        const updateData = {
+            name: req.body.name,
+            email: req.body.email,
+        }
+        const userUpdate = await User.findByIdAndUpdate(req.user.id, updateData, {
+            new: true,
+            runValidators: true,
+            useFindAndModify: false
+        })
+        if (userUpdate) {
+            res.status(200).json({ mesage: "user update sucessfully", userUpdate })
+        }
+    } catch (err) {
+        res.status(400).json({ message: "user data not update" })
+    }
+}
+
+exports.deleteUser = async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id)
+        if (!user) {
+            res.status(400).json({ message: "User not found" })
+        }
+
+        const userDelete = await User.findByIdAndDelete(req.params.id)
+        if (!userDelete) {
+            res.status(400).json({ message: "user not Deleted" })
+        }
+        res.status(200).json({ message: "user data deleted sucessfully", userDelete })
+    }
+    catch (err) {
+        console.log(err)
+        res.status(400).json({message:"something went wrong"})
+    }
+}

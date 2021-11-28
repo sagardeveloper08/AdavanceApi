@@ -1,6 +1,6 @@
 const express = require('express')
 const Product = require('../models/products')
-const ApiFeatures = require('../utilis/apiFeatures')
+// const ApiFeatures = require('../utilis/apiFeatures')
 
 exports.newproduct = async (req, res) => {
     try {
